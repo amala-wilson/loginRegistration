@@ -7,27 +7,29 @@ import re, bcrypt
 # Create your models here.
 
 # Defining regular expressions for each of the fields
-FN_REGEX = re.compile(r'^[a-zA-Z]{2,}$')  # first name
-LN_REGEX = re.compile(r'^([a-zA-Z]){2,}$')  # last name
+N_REGEX = re.compile(r'^[a-zA-Z]{2,}$')  # name
+AL_REGEX = re.compile(r'^([a-zA-Z]){2,}$')  # alias
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]+$')  # email
 PWD_REGEX = re.compile(r'^.{8,}$') # password
 
 # Create your models here.
 class UserManager(models.Manager):
     def validateUser(self, postData):
-        first_name = postData['first_name']
-        last_name = postData['last_name']
+        name = postData['name']
+        alias = postData['alias']
         email = postData['email']
         password = postData['password']
         pwd_confirm = postData['pwd_confirm']
+        dob = postData['birthday']
 
+        print dob
         errors = []
 
-        fnChk, msg = self.validateFN(first_name) # Validate first name
-        if not fnChk:
+        nChk, msg = self.validateN(name) # Validate first name
+        if not nChk:
             errors.append(msg)
-        lnChk, msg = self.validateLN(last_name)  # Validate last name
-        if not lnChk:
+        aChk, msg = self.validateA(alias)  # Validate last name
+        if not aChk:
             errors.append(msg)
         emailChk, msg = self.validateEmail(email)  # Validate email
         if not emailChk:
@@ -39,6 +41,10 @@ class UserManager(models.Manager):
         # Verify password confirmation matches password
         if (password != pwd_confirm):
             errors.append("Passwords don't match!")
+        
+        # Verify if user provided date of birth
+        if not dob:
+            errors.append("Provide Date of Birth!")
 
         if not errors:  # No errors
             try:
@@ -47,7 +53,7 @@ class UserManager(models.Manager):
                 return {'status':False, "errors":errors}
             except:
                 hashedpwd = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-                user = User.objects.create(first_name=first_name, last_name=last_name, email=email, password=hashedpwd)
+                user = User.objects.create(name=name, alias=alias, email=email, password=hashedpwd, dob=dob)
                 return {'status':True, 'user':user}
         else:
             return {'status':False, "errors":errors}
@@ -78,31 +84,31 @@ class UserManager(models.Manager):
     
         return (registerChk, user, errors)
         
-    def validateFN(self, first_name):
-        fnChk = False
+    def validateN(self, name):
+        nChk = False
         msg = ""
 
-        if (len(first_name) < 1):
-            msg = "First name cannot be blank!"
-        elif not FN_REGEX.match(first_name):
-            msg = "Invalid first name! Must contain at least 2 characters!"
+        if (len(name) < 1):
+            msg = "Name cannot be blank!"
+        elif not N_REGEX.match(name):
+            msg = "Invalid name! Must contain at least 2 characters!"
         else:
-            fnChk = True
+            nChk = True
         
-        return (fnChk, msg)
+        return (nChk, msg)
     
-    def validateLN(self, last_name):
-        lnChk = False
+    def validateA(self, alias):
+        aChk = False
         msg = ""
 
-        if (len(last_name) < 1):
-            msg = "Last name cannot be blank!"
-        elif not LN_REGEX.match(last_name):
-            msg = "Invalid last name! Must contain at least 2 characters!"
+        if (len(alias) < 1):
+            msg = "Alias cannot be blank!"
+        elif not AL_REGEX.match(alias):
+            msg = "Invalid alias! Must contain at least 2 characters!"
         else:     
-            lnChk = True
+            aChk = True
         
-        return (lnChk, msg)
+        return (aChk, msg)
 
     def validateEmail(self, email):
         emailChk = False
@@ -130,10 +136,44 @@ class UserManager(models.Manager):
         
         return pwdChk, msg
 
+class PokeManager(models.Manager):
+    # def pokeCount(self, userID):
+    #     try:
+    #         user = User.objects.get(id=userID)
+    #         count = count + 1
+    #         mypoke = Poke.objects.create(user=user, poke=count)
+
+    def checkPoke(self, count, userID):
+        try:
+            user = User.objects.get(id=userID)
+            # print user.name
+            mypoke = Poke.objects.create(user=user, poke=count)
+            # print mypoke
+            return (True, "Got your poke")
+        except:
+            return (False, "Didn't receive your poke")
+
+    # def newpoke(self, pokeID, userID):
+    #     # try:
+    #     poke = Poke.objects.get(id=pokeID)
+    #     # except:
+    #         # return (False, "Secret not found")
+    #     user = User.objects.get(id=userID)
+    #     poke.poked_by.add(user)
+    #     return #(True, "Secret liked")
+
 class User(models.Model):
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    alias = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
+    dob = models.DateField(null=True)
 
     objects = UserManager()
+
+class Poke(models.Model):
+    user = models.ForeignKey(User)  # A User can have many pokes
+    poke = models.IntegerField()  # Store poke count of each user
+    poked_by = models.ManyToManyField(User, related_name="pokes")
+
+    objects = PokeManager()

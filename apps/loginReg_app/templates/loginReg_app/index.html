@@ -15,18 +15,19 @@
         <h2>Register</h2>
         <form action="/register" method="POST">
             {% csrf_token %}
-            First name: <input type="text" name="first_name">
-            Last name: <input type="text" name="last_name">
-            E-mail: <input type="text" name="email">
-            Password: <input type="password" name="password">
-            Confirm Password: <input type="password" name="pwd_confirm">
+            Name: <input type="text" name="name"><br>
+            Alias: <input type="text" name="alias"><br>
+            E-mail: <input type="text" name="email"><br>
+            Password: <input type="password" name="password"> *Password should be at least 8 characters<br>
+            Confirm Password: <input type="password" name="pwd_confirm"><br>
+            Date of Birth: <input type="date" name="birthday"><br>
             <input type="submit" value="Register">
         </form>
         <h2>Login</h2>
         <form action="/login" method="POST">
             {% csrf_token %}
-            E-mail: <input type="email" name="login_email">
-            Password: <input type="password" name="login_password">
+            E-mail: <input type="email" name="login_email"><br>
+            Password: <input type="password" name="login_password"><br>
             <input type="submit" value="Login">
         </form>
     </body>
