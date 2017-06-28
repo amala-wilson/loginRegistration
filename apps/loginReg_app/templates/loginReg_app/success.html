@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Dojo Secrets</title>
+    </head>
+    <body>
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <p class="{{message.tags}}">{{message}}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </body>
+</html> 
